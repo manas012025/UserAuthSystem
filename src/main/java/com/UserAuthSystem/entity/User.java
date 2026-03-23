@@ -19,7 +19,7 @@ import lombok.ToString;
 
 @Audited(withModifiedFlag = true)
 @Entity
-@Table(name = "USER", schema = "${auth_schema_name}")
+@Table(name = "USERS")
 @Data
 @Builder
 @ToString
