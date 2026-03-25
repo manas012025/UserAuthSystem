@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @SpringBootApplication
 @EnableJpaAuditing
@@ -19,9 +21,21 @@ public class UserAuthSystemApplication {
 	@Bean
 	public AuditorAware<String> auditorProvider() {
 	    return () -> Optional.ofNullable(
-//	        SecurityContextHolder.getContext().getAuthentication().getName()
-	    		"USER"
-	    );
+	            SecurityContextHolder.getContext().getAuthentication()
+	    )
+	    .filter(auth -> auth.isAuthenticated())
+	    .map(auth -> {
+	        Object principal = auth.getPrincipal();
+
+	        if (principal instanceof UserDetails) {
+	            return ((UserDetails) principal).getUsername();
+	        } else if ("anonymousUser".equals(principal)) {
+	            return "SYSTEM";
+	        } else {
+	            return principal.toString();
+	        }
+	    })
+	    .or(() -> Optional.of("SYSTEM"));
 	}
 
 }

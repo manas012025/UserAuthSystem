@@ -48,4 +48,7 @@ public class User extends AuditableEntity implements Serializable{
 	
 	private String role;
 	
+	@Column(name = "session_id")
+	private String sessionId;
+	
 }

@@ -47,5 +47,26 @@ public class UserUtil {
 			exist.setRole(newUser.getRole());
 		}
 	}
+
+	public void entityToDto(UserDto response, User savedUser) {
+		if(savedUser.getId()!=null)
+			response.setId(savedUser.getId());
+		
+		if(savedUser.getUsername()!=null&&!Strings.isBlank(savedUser.getUsername())) {
+			response.setUsername(savedUser.getUsername());
+		}
+		if(savedUser.getUsername()!=null&&!Strings.isBlank(savedUser.getUsername())) {
+			response.setEmail(savedUser.getEmail());
+		}
+		if(savedUser.getUsername()!=null&&!Strings.isBlank(savedUser.getUsername())) {
+			response.setMobile(savedUser.getMobile());
+		}
+		if(savedUser.getUsername()!=null&&!Strings.isBlank(savedUser.getUsername())) {
+			response.setPassword(savedUser.getPassword());
+		}
+		if(savedUser.getUsername()!=null&&!Strings.isBlank(savedUser.getUsername())) {
+			response.setRole(savedUser.getRole());
+		}
+	}
 	
 }
