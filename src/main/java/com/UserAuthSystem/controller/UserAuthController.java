@@ -23,6 +23,8 @@ import com.UserAuthSystem.service.UserAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+//author - Manas Tripathy
+
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
@@ -38,6 +40,7 @@ public class UserAuthController {
     
     private final UserAuthService service;
 
+    
 	@PostMapping("/signUp")
 	public ResponseEntity<?> signUp(@Valid @RequestBody UserDto userDto) {
 		userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
