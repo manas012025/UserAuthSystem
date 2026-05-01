@@ -23,8 +23,6 @@ import com.UserAuthSystem.service.UserAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-//author - Manas Tripathy
-
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
