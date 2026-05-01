@@ -19,7 +19,9 @@ jobs:
         java-version: '17'
 
     - name: Build jar
-      run: ./mvnw clean package -DskipTests
+      run: |
+        chmod +x ./mvnw
+        ./mvnw clean package -DskipTests
 
     - name: Login DockerHub
       uses: docker/login-action@v4
