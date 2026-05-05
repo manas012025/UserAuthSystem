@@ -69,7 +69,9 @@ jobs:
 
           echo "Switching traffic (update nginx if used)"
 
-          # OPTIONAL: If using NGINX reverse proxy, reload here
+          echo "Switching traffic to port $PORT"
+          sudo sed -i "s|proxy_pass http://localhost:.*|proxy_pass http://localhost:$PORT;|" /etc/nginx/conf.d/userauth.conf
+          sudo nginx -s reload
 
           echo "Stopping old container: $OLD"
           docker stop $OLD || true
