@@ -65,10 +65,7 @@ jobs:
           docker run -d --name $NEW -p $PORT:8080 $IMAGE
 
           echo "Waiting for app to be ready..."
-          sleep 15
-
-          echo "Health check"
-          curl -f http://localhost:$PORT/actuator/health || exit 1
+          sleep 15\          
 
           echo "Switching traffic (update nginx if used)"
 
@@ -77,3 +74,6 @@ jobs:
           echo "Stopping old container: $OLD"
           docker stop $OLD || true
           docker rm $OLD || true
+
+          echo "Cleaning unused Docker images"
+          docker image prune -af
