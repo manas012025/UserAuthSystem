@@ -48,11 +48,14 @@ public class SecurityConfig {
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/user/signUp", "/user/login","/actuator/**").permitAll()
+                    // ✅ VERY IMPORTANT (actuator FIRST)
+                    .requestMatchers("/actuator/**").permitAll()
+
+                    .requestMatchers("/user/login", "/user/signUp").permitAll()
+
                     .anyRequest().authenticated()
             );
 
-        //Add JWT filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
