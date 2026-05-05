@@ -39,36 +39,37 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-    	String path = request.getRequestURI();
-        //Skip public endpoints
-        if (isPublicEndpoint(path)) {
+        String path = request.getServletPath();
+
+        // ✅ Skip public endpoints
+        if (path.startsWith("/actuator") ||
+            path.startsWith("/user/login") ||
+            path.startsWith("/user/signUp")) {
+
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
 
-        String token = null;
-        String username = null;
-
-        //Extract token
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+        // ✅ Allow if no token (Spring will handle security rules)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        //Authenticate only if username present & not already authenticated
+        String token = authHeader.substring(7);
+        String username = jwtUtil.extractUsername(token);
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = userService.loadUserByUsername(username);
 
-            //Validate token FIRST
             if (!jwtUtil.validateToken(token, userDetails.getUsername())) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
 
-            // Fetch DB user safely
             User dbUser = userRepo.findByUsername(username);
 
             if (dbUser == null) {
@@ -76,7 +77,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            //Validate session
             String sessionIdFromToken = jwtUtil.extractSessionId(token);
 
             if (!sessionIdFromToken.equals(dbUser.getSessionId())) {
@@ -84,7 +84,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            //Set authentication
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
@@ -96,12 +95,4 @@ public class JwtFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-    //Clean reusable method
-    private boolean isPublicEndpoint(String path) {
-        return pathMatcher.match("/user/login", path) ||
-               pathMatcher.match("/user/signUp", path) ||
-               pathMatcher.match("/userauthsystem/actuator/**", path) ||
-               pathMatcher.match("/actuator/**", path);
-    }
-}
+  }

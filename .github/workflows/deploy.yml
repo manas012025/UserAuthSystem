@@ -68,7 +68,7 @@ jobs:
           sleep 15
 
           echo "Health check"
-          curl -f http://localhost:$PORT/userauthsystem/actuator/health || exit 1
+          curl -f http://localhost:$PORT/actuator/health || exit 1
 
           echo "Switching traffic (update nginx if used)"
 
