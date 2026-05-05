@@ -27,21 +27,22 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
     private CustomUserDetailsService userService;
-    
+
     @Autowired
     private UserRepo userRepo;
-    
+
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
-    
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-    	
-    	String path = request.getRequestURI();
 
-        if (pathMatcher.match("/**/actuator/**", path)) {
+        String path = request.getServletPath();
+
+        //Skip public endpoints
+        if (isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -51,37 +52,56 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
+        //Extract token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
             username = jwtUtil.extractUsername(token);
-            String sessionIdFromToken = jwtUtil.extractSessionId(token);
-
-            // get user from DB
-            User dbUser = userRepo.findByUsername(username);
-
-            // CHECK SESSION
-            if (!sessionIdFromToken.equals(dbUser.getSessionId())) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
         }
 
+        //Authenticate only if username present & not already authenticated
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = userService.loadUserByUsername(username);
 
-            if (jwtUtil.validateToken(token, userDetails.getUsername())) {
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            //Validate token FIRST
+            if (!jwtUtil.validateToken(token, userDetails.getUsername())) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
+
+            // Fetch DB user safely
+            User dbUser = userRepo.findByUsername(username);
+
+            if (dbUser == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
+            //Validate session
+            String sessionIdFromToken = jwtUtil.extractSessionId(token);
+
+            if (!sessionIdFromToken.equals(dbUser.getSessionId())) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
+            //Set authentication
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    //Clean reusable method
+    private boolean isPublicEndpoint(String path) {
+        return pathMatcher.match("/user/login", path) ||
+               pathMatcher.match("/user/signUp", path) ||
+               pathMatcher.match("/actuator/**", path);
     }
 }
