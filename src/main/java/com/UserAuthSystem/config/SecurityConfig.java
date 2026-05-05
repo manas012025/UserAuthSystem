@@ -52,7 +52,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             );
 
-        // ✅ Add JWT filter
+        //Add JWT filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

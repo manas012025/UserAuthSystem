@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.UserAuthSystem.entity.User;
@@ -29,17 +30,21 @@ public class JwtFilter extends OncePerRequestFilter {
     
     @Autowired
     private UserRepo userRepo;
-
+    
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
+    
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
     	
-    	if (request.getServletPath().startsWith("/actuator")) {
-    	    filterChain.doFilter(request, response);
-    	    return;
-    	}
+    	String path = request.getRequestURI();
+
+        if (pathMatcher.match("/**/actuator/**", path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String authHeader = request.getHeader("Authorization");
 
