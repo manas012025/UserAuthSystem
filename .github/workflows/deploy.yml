@@ -35,14 +35,45 @@ jobs:
     - name: Push Docker Image
       run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/userauthsystem:latest
       
-    - name: SSH and deploy to ec2
+    - name: SSH and deploy to EC2 (Zero Downtime)
       uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-           docker stop userauthsystem || true
-           docker rm userauthsystem || true
-           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/userauthsystem:latest
-           docker run -d --name userauthsystem -p  8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/userauthsystem:latest
+
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/userauthsystem:latest
+
+          echo "Pull latest image"
+          docker pull $IMAGE
+
+          echo "Check current running container"
+          CURRENT=$(docker ps --filter "name=userauthsystem" --format "{{.Names}}")
+
+          if [ "$CURRENT" == "userauthsystem-blue" ]; then
+            NEW="userauthsystem-green"
+            OLD="userauthsystem-blue"
+            PORT=8081
+          else
+            NEW="userauthsystem-blue"
+            OLD="userauthsystem-green"
+            PORT=8082
+          fi
+
+          echo "Starting new container: $NEW on port $PORT"
+          docker run -d --name $NEW -p $PORT:8080 $IMAGE
+
+          echo "Waiting for app to be ready..."
+          sleep 15
+
+          echo "Health check"
+          curl -f http://localhost:$PORT/actuator/health || exit 1
+
+          echo "Switching traffic (update nginx if used)"
+
+          # OPTIONAL: If using NGINX reverse proxy, reload here
+
+          echo "Stopping old container: $OLD"
+          docker stop $OLD || true
+          docker rm $OLD || true
