@@ -21,6 +21,8 @@ import com.UserAuthSystem.repository.UserRepo;
 import com.UserAuthSystem.security.JwtUtil;
 import com.UserAuthSystem.service.UserAuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +52,8 @@ public class UserAuthController {
 		return new ResponseEntity<>(response, response.getStatus());
 	}
 	
+	@Operation(summary = "Fetch Users")
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/fetch")
 	@RateLimit(capacity = 20, durationInMinutes = 1)
 	public ResponseEntity<?> fetch(){
@@ -57,6 +61,7 @@ public class UserAuthController {
 		return new ResponseEntity<>(response, response.getStatus());
 	}
 	
+	@Operation(summary = "User Login", description = "Authenticate user and return JWT token")
 	@PostMapping("/login")
 	@RateLimit(capacity = 5, durationInMinutes = 1)
     public ResponseEntity<?> login(@RequestBody UserDto user) {

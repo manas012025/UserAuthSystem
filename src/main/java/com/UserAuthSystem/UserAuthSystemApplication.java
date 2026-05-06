@@ -11,6 +11,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+
 @EnableAspectJAutoProxy
 @SpringBootApplication
 @EnableJpaAuditing
@@ -39,5 +44,5 @@ public class UserAuthSystemApplication {
 	    })
 	    .or(() -> Optional.of("SYSTEM"));
 	}
-
+	
 }
