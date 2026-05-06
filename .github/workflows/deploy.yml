@@ -70,8 +70,9 @@ jobs:
           echo "Switching traffic (update nginx if used)"
 
           echo "Switching traffic to port $PORT"
-          sudo sed -i "s|proxy_pass http://localhost:.*|proxy_pass http://localhost:$PORT;|" /etc/nginx/conf.d/userauth.conf
-          sudo nginx -s reload
+          sudo sed -i "s|set \$backend .*|set \$backend http://127.0.0.1:$PORT;|" /etc/nginx/conf.d/upstream.conf
+          sudo nginx -t
+          sudo systemctl reload nginx
 
           echo "Stopping old container: $OLD"
           docker stop $OLD || true
