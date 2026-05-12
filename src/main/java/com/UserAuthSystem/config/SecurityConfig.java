@@ -48,7 +48,7 @@ public class SecurityConfig {
 						//VERY IMPORTANT (actuator FIRST)
 						.requestMatchers("/actuator/**").permitAll()
 
-						.requestMatchers("/user/login", "/user/signUp", "/v3/api-docs/**", "/swagger-ui/**",
+						.requestMatchers("/user/login", "/user/signUp","/user/generateOtp", "/user/resetPassword","/v3/api-docs/**", "/swagger-ui/**",
 								"/swagger-ui.html")
 						.permitAll()
 

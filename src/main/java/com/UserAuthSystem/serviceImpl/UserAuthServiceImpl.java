@@ -1,20 +1,23 @@
 package com.UserAuthSystem.serviceImpl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.UserAuthSystem.dto.ResponseDto;
 import com.UserAuthSystem.dto.UserDto;
+import com.UserAuthSystem.entity.ResetPasswordOtp;
 import com.UserAuthSystem.entity.User;
+import com.UserAuthSystem.repository.ResetPasswordOtpRepository;
 import com.UserAuthSystem.repository.UserRepo;
 import com.UserAuthSystem.service.UserAuthService;
+import com.UserAuthSystem.util.AsyncUtil;
 import com.UserAuthSystem.util.UserUtil;
-
-import jakarta.validation.Valid;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +26,10 @@ import lombok.RequiredArgsConstructor;
 public class UserAuthServiceImpl implements UserAuthService{
 	
 	private final UserRepo userRepo;
+	
+	private final ResetPasswordOtpRepository reOtpRepository;
+	
+    private final AsyncUtil asyncUtil;
 	
 	private final UserUtil userUtil;
 	
@@ -69,5 +76,54 @@ public class UserAuthServiceImpl implements UserAuthService{
 		}
 		return new ResponseDto(HttpStatus.NO_CONTENT,HttpStatus.NO_CONTENT.value(),null,"No User Data Present");
 	}
+
+	@Override
+	public ResponseDto generateOtp(UserDto dto) {
+		String otp=generate();
+		String message=null;
+		User user=userRepo.findByEmail(dto.getEmail());
+		if(user==null) {
+			return new ResponseDto(HttpStatus.NO_CONTENT,HttpStatus.NO_CONTENT.value(),null,"InValid Email");
+		}
+		ResetPasswordOtp reOtp=reOtpRepository.findByEmail(dto.getEmail());
+		if(reOtp!=null) {
+			reOtp.setOtp(otp);
+			reOtp.setExpiryTime(LocalDateTime.now().plusMinutes(2));
+			message="OTP resended to mail";
+		}else{
+			reOtp=new ResetPasswordOtp();
+			reOtp.setEmail(dto.getEmail());
+			reOtp.setOtp(otp);
+			reOtp.setVerified(true);
+			reOtp.setExpiryTime(LocalDateTime.now().plusMinutes(2));
+			message="OTP sended to mail";
+		}
+		reOtpRepository.save(reOtp);
+		asyncUtil.sendOtp(dto.getEmail(), otp);
+		return new ResponseDto(HttpStatus.OK,HttpStatus.OK.value(),null,message);
+	}
+	
+	public String generate() {
+	    Random random = new Random();
+	    int otp = 100000 + random.nextInt(900000);
+	    return String.valueOf(otp);
+	}
+
+	@Override
+	public ResponseDto resetPassword(UserDto userDto) {
+		ResetPasswordOtp reOtp=reOtpRepository.findByEmailAndOtp(userDto.getEmail(), userDto.getOtp());
+		if(reOtp==null) {
+			return new ResponseDto(HttpStatus.NO_CONTENT,HttpStatus.NO_CONTENT.value(),null,"InValid Otp Or Email");
+		}else {
+			if(LocalDateTime.now().isAfter(reOtp.getExpiryTime())) {
+				return new ResponseDto(HttpStatus.INTERNAL_SERVER_ERROR,HttpStatus.INTERNAL_SERVER_ERROR.value(),null,"Otp Expired");
+			}
+		}
+		User user=userRepo.findByEmail(userDto.getEmail());
+		user.setPassword(userDto.getPassword());
+		userRepo.save(user);
+		return new ResponseDto(HttpStatus.OK,HttpStatus.OK.value(),null,"Password Reseted");
+	}
+	
 
 }

@@ -98,4 +98,18 @@ public class UserAuthController {
 
 	    return ResponseEntity.ok("Logged out successfully");
 	}
+	
+	@PostMapping("/generateOtp")
+	@RateLimit(capacity = 4, durationInMinutes = 1)
+	public ResponseEntity<?> generateOtp(@RequestBody UserDto userDto){
+		ResponseDto response=service.generateOtp(userDto);
+		return new ResponseEntity<>(response, response.getStatus());
+	}
+	
+	@PostMapping("/resetPassword")
+	public ResponseEntity<?> resetPassword(@RequestBody UserDto userDto){
+		userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+		ResponseDto response=service.resetPassword(userDto);
+		return new ResponseEntity<>(response, response.getStatus());
+	}
 }

@@ -14,4 +14,8 @@ public interface UserAuthService {
 
 	ResponseDto fetch();
 
+	ResponseDto generateOtp(UserDto userDto);
+
+	ResponseDto resetPassword(UserDto userDto);
+
 }

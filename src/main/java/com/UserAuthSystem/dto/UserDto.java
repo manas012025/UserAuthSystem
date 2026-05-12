@@ -14,4 +14,5 @@ public class UserDto {
 	private String password;
 	@NotBlank(message = "username Mandatory")
 	private String role;
+	private String otp;
 }
