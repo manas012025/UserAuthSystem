@@ -122,6 +122,7 @@ public class UserAuthServiceImpl implements UserAuthService{
 		User user=userRepo.findByEmail(userDto.getEmail());
 		user.setPassword(userDto.getPassword());
 		userRepo.save(user);
+		reOtpRepository.delete(reOtp);
 		return new ResponseDto(HttpStatus.OK,HttpStatus.OK.value(),null,"Password Reseted");
 	}
 	
