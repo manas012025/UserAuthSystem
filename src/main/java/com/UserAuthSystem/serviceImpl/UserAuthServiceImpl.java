@@ -88,14 +88,14 @@ public class UserAuthServiceImpl implements UserAuthService{
 		ResetPasswordOtp reOtp=reOtpRepository.findByEmail(dto.getEmail());
 		if(reOtp!=null) {
 			reOtp.setOtp(otp);
-			reOtp.setExpiryTime(LocalDateTime.now().plusMinutes(2));
+			reOtp.setExpiryTime(LocalDateTime.now().plusMinutes(3));
 			message="OTP resended to mail";
 		}else{
 			reOtp=new ResetPasswordOtp();
 			reOtp.setEmail(dto.getEmail());
 			reOtp.setOtp(otp);
 			reOtp.setVerified(true);
-			reOtp.setExpiryTime(LocalDateTime.now().plusMinutes(2));
+			reOtp.setExpiryTime(LocalDateTime.now().plusMinutes(3));
 			message="OTP sended to mail";
 		}
 		reOtpRepository.save(reOtp);
